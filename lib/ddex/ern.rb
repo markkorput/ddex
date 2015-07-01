@@ -1,5 +1,6 @@
 require "active_support/core_ext/module/attribute_accessors"
 require "nokogiri"
+require "roxml/roxml" # monkeypatches to ROXML::ClassMethods::Operations module and adds the from_xml_v2 method
 
 module DDEX
   module ERN
@@ -70,7 +71,6 @@ module DDEX
       config.any? { |name,cfg| name == version || cfg[:version] == version || cfg[:message_schema_version_id] == version }
     end
 
-    # options[:validate] ???
     def self.read(xml, options = nil)
       options ||= {}
       raise ArgumentError, "options must be a Hash" unless options.is_a?(Hash)
@@ -80,7 +80,11 @@ module DDEX
       klass = load_version(ver)
 
       begin
-        klass.from_xml(doc)
+        if options[:validate] == false
+          klass.from_xml_v2(doc, :validate => false)
+        else
+          klass.from_xml(doc)
+        end
       rescue NoMethodError => e         # Yes, fo real... this is from ROXML
         raise unless e.name == :root    # It's legit
         raise XMLLoadError, "XML is not well-formed"

@@ -160,5 +160,20 @@ describe DDEX::ERN do
         end
       end
     end
+
+    context "when the XML is missing required elements" do
+      it "throws an exception by default" do
+        expect {
+          DDEX::ERN.read(fixture("emptyReleaseMessage"), :version => "ern/34")
+        }.to raise_error(DDEX::XMLLoadError, /missing required element\: MessageHeader/)
+      end
+
+      it "parses without exceptions when the :validate => false option is specified" do
+        expect {
+          book  = DDEX::ERN.read(fixture("emptyReleaseMessage"), :validate => false, :version => "ern/34")
+          expect(book.message_header).to be_nil
+        }.to_not raise_error
+      end
+    end
   end
 end
